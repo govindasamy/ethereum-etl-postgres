@@ -13,7 +13,7 @@ select
     receipt_contract_address,
     receipt_root,
     receipt_status,
-    block_timestamp,
+    datetime(block_timestamp) as block_timestamp,
     block_number,
     block_hash,
     max_fee_per_gas,

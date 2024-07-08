@@ -1,5 +1,5 @@
 select
-    timestamp,
+    datetime(timestamp) AS timestamp,
     number,
     `hash`,
     parent_hash,
