@@ -88,14 +88,34 @@ do
 done
 
 # Rename output folder for flattened tables
-gsutil -m mv gs://${output_bucket}/${export_temp_dataset}.${export_temp_blocks_table}/* gs://${output_bucket}/bigquery-public-data:crypto_ethereum.blocks/
-gsutil -m mv gs://${output_bucket}/${export_temp_dataset}.${export_temp_transactions_table}/* gs://${output_bucket}/bigquery-public-data:crypto_ethereum.transactions/
-gsutil -m mv gs://${output_bucket}/${export_temp_dataset}.${export_temp_logs_table}/* gs://${output_bucket}/bigquery-public-data:crypto_ethereum.logs/
-gsutil -m mv gs://${output_bucket}/${export_temp_dataset}.${export_temp_contracts_table}/* gs://${output_bucket}/bigquery-public-data:crypto_ethereum.contracts/
+gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_blocks_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.blocks/
+gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_transactions_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.transactions/
+gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_logs_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.logs/
+gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_contracts_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.contracts/
 
-gsutil -m mv gs://${output_bucket}/${export_temp_dataset}.${export_temp_token_transfers_table}/* gs://${output_bucket}/bigquery-public-data:crypto_ethereum.token_transfers/
-gsutil -m mv gs://${output_bucket}/${export_temp_dataset}.${export_temp_traces_table}/* gs://${output_bucket}/bigquery-public-data:crypto_ethereum.traces/
-gsutil -m mv gs://${output_bucket}/${export_temp_dataset}.${export_temp_tokens_table}/* gs://${output_bucket}/bigquery-public-data:crypto_ethereum.tokens/
+gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_token_transfers_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.token_transfers/
+gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_traces_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.traces/
+gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_tokens_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.tokens/
 
 # Cleanup
 bq rm -r -f ${export_temp_dataset}
+
+db_name_with_path=$4
+gsutil -m cp -r gs://${output_bucket}/${start_date}-${end_date} /home/ubuntu/ethereum_data
+
+for dir in "/home/ubuntu/ethereum_data/${start_date}-${end_date}"/*
+do
+    table_name="${dir##*.}"
+    echo "Processing directory $dir : $table_name"
+    for file in "$dir"/*
+    do
+        filename=$(basename "$file")
+        filename_without_ext="${filename%.*}"
+        destination_file="$dir/$filename_without_ext.csv"
+        gunzip -c "$file" > "${destination_file}"
+        sudo sqlite3 ${db_name_with_path} <<EOF
+.mode csv
+.import "${destination_file}" $table_name
+EOF
+    done
+done
