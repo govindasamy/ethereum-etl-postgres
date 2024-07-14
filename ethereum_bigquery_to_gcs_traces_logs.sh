@@ -20,9 +20,11 @@ fi
 export_temp_dataset="export_temp_dataset"
 export_temp_blocks_table="flattened_blocks"
 export_temp_transactions_table="flattened_transactions"
+export_temp_logs_table="flattened_logs"
 export_temp_contracts_table="flattened_contracts"
 
 export_temp_token_transfers_table="flattened_token_transfers"
+export_temp_traces_table="flattened_traces"
 export_temp_tokens_table="flattened_tokens"
 
 bq rm -r -f ${export_temp_dataset}
@@ -44,16 +46,20 @@ flatten_table() {
 
 flatten_table "flatten_crypto_ethereum_blocks.sql" "${export_temp_blocks_table}" "timestamp"
 flatten_table "flatten_crypto_ethereum_transactions.sql" "${export_temp_transactions_table}" "block_timestamp"
+flatten_table "flatten_crypto_ethereum_logs.sql" "${export_temp_logs_table}" "block_timestamp"
 flatten_table "flatten_crypto_ethereum_contracts.sql" "${export_temp_contracts_table}" "block_timestamp"
 
 flatten_table "flatten_crypto_ethereum_token_transfers.sql" "${export_temp_token_transfers_table}" "block_timestamp"
+flatten_table "flatten_crypto_ethereum_traces.sql" "${export_temp_traces_table}" "block_timestamp"
 flatten_table "flatten_crypto_ethereum_tokens.sql" "${export_temp_tokens_table}" "block_timestamp"
 
 declare -a tables=(
     "${export_temp_dataset}.${export_temp_blocks_table}"
     "${export_temp_dataset}.${export_temp_transactions_table}"
     "${export_temp_dataset}.${export_temp_token_transfers_table}"
+    "${export_temp_dataset}.${export_temp_traces_table}"
     "${export_temp_dataset}.${export_temp_tokens_table}"
+    "${export_temp_dataset}.${export_temp_logs_table}"
     "${export_temp_dataset}.${export_temp_contracts_table}"
 )
 
@@ -84,9 +90,11 @@ done
 # Rename output folder for flattened tables
 gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_blocks_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.blocks/
 gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_transactions_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.transactions/
+gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_logs_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.logs/
 gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_contracts_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.contracts/
 
 gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_token_transfers_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.token_transfers/
+gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_traces_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.traces/
 gsutil -m mv gs://${output_bucket}/${start_date}-${end_date}/${export_temp_dataset}.${export_temp_tokens_table}/* gs://${output_bucket}/${start_date}-${end_date}/bigquery-public-data:crypto_ethereum.tokens/
 
 # Cleanup
